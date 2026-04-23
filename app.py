@@ -5,12 +5,21 @@ from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__)
 
-DATABASE_URL = os.getenv('DATABASE_URL')
+# Get DATABASE_URL from Render environment
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set!")
 
 def get_db_connection():
-    conn = psycopg2.connect(DATABASE_URL)
-    conn.cursor_factory = RealDictCursor
-    return conn
+    """Connect to PostgreSQL using the DATABASE_URL"""
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        conn.cursor_factory = RealDictCursor
+        return conn
+    except Exception as e:
+        print("Database connection error:", e)
+        raise
 
 def init_db():
     conn = get_db_connection()
@@ -27,6 +36,14 @@ def init_db():
     conn.commit()
     conn.close()
 
+# ====================== API ROUTES ======================
+# (Keep your existing routes here - add_task, get_tasks, etc.)
+
+if __name__ == '__main__':
+    init_db()
+    print("=== Task Manager with PostgreSQL Started ===")
+    print("Connected to:", DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else "Database")
+    app.run(debug=True)
 # ====================== API ROUTES ======================
 
 @app.route('/api/tasks', methods=['GET'])
