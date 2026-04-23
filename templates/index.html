@@ -103,6 +103,7 @@
 
             tasks.forEach(task => {
                 const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !task.completed;
+                
                 const card = document.createElement('div');
                 card.className = `card mb-3 task-card ${task.completed ? 'border-success' : ''}`;
                 card.innerHTML = `
@@ -127,6 +128,8 @@
             });
         }
 
+        // ... (rest of the functions remain the same - addTask, toggleComplete, editTask, etc.)
+
         async function addTask() {
             const title = document.getElementById('titleInput').value.trim();
             if (!title) return alert("Please enter a task title");
@@ -147,20 +150,11 @@
         }
 
         async function toggleComplete(id) {
-            // Get current task to know the opposite state
-            const res = await fetch(API_URL);
-            const tasks = await res.json();
-            const task = tasks.find(t => t.id === id);
-            if (!task) return;
-
-            const newStatus = !task.completed;
-
             await fetch(`${API_URL}/${id}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ completed: newStatus })
+                body: JSON.stringify({ completed: true })
             });
-
             loadTasks();
         }
 
