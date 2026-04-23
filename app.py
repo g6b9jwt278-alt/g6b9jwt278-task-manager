@@ -30,10 +30,19 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
+    print("Database table initialized successfully")
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/fixdb')
+def fix_database():
+    try:
+        init_db()
+        return "✅ Database table created/fixed successfully!"
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 @app.route('/api/tasks', methods=['GET'])
 def get_tasks():
