@@ -10,6 +10,7 @@
         .task-card { transition: all 0.2s; }
         .task-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
         .completed { text-decoration: line-through; opacity: 0.75; }
+        .overdue { color: #dc3545; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -26,7 +27,7 @@
             <div class="card-body">
                 <h5>Add New Task</h5>
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-5">
                         <input type="text" id="titleInput" class="form-control" placeholder="What needs to be done?">
                     </div>
                     <div class="col-md-3">
@@ -36,7 +37,10 @@
                             <option value="Low">Low</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <input type="date" id="dueDateInput" class="form-control">
+                    </div>
+                    <div class="col-md-2">
                         <button onclick="addTask()" class="btn btn-success w-100">Add Task</button>
                     </div>
                 </div>
@@ -60,6 +64,10 @@
                     <div class="mb-3">
                         <label class="form-label">Title</label>
                         <input type="text" id="editTitle" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" id="editDueDate" class="form-control">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Priority</label>
@@ -94,6 +102,7 @@
             }
 
             tasks.forEach(task => {
+                const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !task.completed;
                 const card = document.createElement('div');
                 card.className = `card mb-3 task-card ${task.completed ? 'border-success' : ''}`;
                 card.innerHTML = `
@@ -102,16 +111,14 @@
                             <div>
                                 <h5 class="${task.completed ? 'completed' : ''}">${task.title}</h5>
                                 <span class="badge bg-${task.priority === 'High' ? 'danger' : task.priority === 'Medium' ? 'warning' : 'info'}">${task.priority}</span>
+                                ${task.due_date ? `<small class="ms-2 ${isOverdue ? 'overdue' : 'text-muted'}">Due: ${task.due_date}</small>` : ''}
                             </div>
                             <div class="btn-group">
-                                <button onclick="toggleComplete(${task.id})" 
-                                        class="btn btn-sm ${task.completed ? 'btn-warning' : 'btn-success'} me-1">
+                                <button onclick="toggleComplete(${task.id})" class="btn btn-sm ${task.completed ? 'btn-warning' : 'btn-success'} me-1">
                                     ${task.completed ? 'Undo' : 'Complete'}
                                 </button>
-                                <button onclick="editTask(${task.id}, '${task.title.replace(/'/g, "\\'")}')" 
-                                        class="btn btn-sm btn-primary me-1">Edit</button>
-                                <button onclick="deleteTask(${task.id})" 
-                                        class="btn btn-sm btn-danger">Delete</button>
+                                <button onclick="editTask(${task.id}, '${task.title.replace(/'/g, "\\'")}', '${task.due_date || ''}', '${task.priority}')" class="btn btn-sm btn-primary me-1">Edit</button>
+                                <button onclick="deleteTask(${task.id})" class="btn btn-sm btn-danger">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -129,48 +136,45 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ 
                     title: title, 
-                    priority: document.getElementById('priorityInput').value 
+                    priority: document.getElementById('priorityInput').value,
+                    due_date: document.getElementById('dueDateInput').value
                 })
             });
 
             document.getElementById('titleInput').value = '';
+            document.getElementById('dueDateInput').value = '';
             loadTasks();
         }
 
         async function toggleComplete(id) {
-            // This is the key fix: we fetch current state first, then toggle it
-            const res = await fetch(API_URL);
-            const tasks = await res.json();
-            const task = tasks.find(t => t.id === id);
-            if (!task) return;
-
-            const newCompleted = !task.completed;
-
             await fetch(`${API_URL}/${id}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ completed: newCompleted })
+                body: JSON.stringify({ completed: true })
             });
-
             loadTasks();
         }
 
-        function editTask(id, title) {
+        function editTask(id, title, due_date, priority) {
             document.getElementById('editTaskId').value = id;
             document.getElementById('editTitle').value = title;
+            document.getElementById('editDueDate').value = due_date || '';
+            document.getElementById('editPriority').value = priority;
             new bootstrap.Modal(document.getElementById('editModal')).show();
         }
 
         async function saveEdit() {
             const id = document.getElementById('editTaskId').value;
             const title = document.getElementById('editTitle').value.trim();
+            const due_date = document.getElementById('editDueDate').value;
+            const priority = document.getElementById('editPriority').value;
 
             if (!title) return alert("Title is required");
 
             await fetch(`${API_URL}/${id}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ title: title })
+                body: JSON.stringify({ title, due_date, priority })
             });
 
             bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
