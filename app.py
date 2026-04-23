@@ -37,6 +37,7 @@ def init_db():
     conn.close()
 
 # ====================== API ROUTES ======================
+
 # (Keep your existing routes here - add_task, get_tasks, etc.)
 
 if __name__ == '__main__':
@@ -44,6 +45,7 @@ if __name__ == '__main__':
     print("=== Task Manager with PostgreSQL Started ===")
     print("Connected to:", DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else "Database")
     app.run(debug=True)
+
 # ====================== API ROUTES ======================
 
 @app.route('/api/tasks', methods=['GET'])
