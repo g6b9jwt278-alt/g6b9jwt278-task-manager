@@ -137,7 +137,7 @@
                 body: JSON.stringify({ 
                     title: title, 
                     priority: document.getElementById('priorityInput').value,
-                    due_date: document.getElementById('dueDateInput').value
+                    due_date: document.getElementById('dueDateInput').value 
                 })
             });
 
@@ -147,11 +147,20 @@
         }
 
         async function toggleComplete(id) {
+            // Get current task to know the opposite state
+            const res = await fetch(API_URL);
+            const tasks = await res.json();
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            const newStatus = !task.completed;
+
             await fetch(`${API_URL}/${id}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ completed: true })
+                body: JSON.stringify({ completed: newStatus })
             });
+
             loadTasks();
         }
 
