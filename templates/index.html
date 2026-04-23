@@ -127,7 +127,10 @@
             await fetch(API_URL, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ title: title, priority: document.getElementById('priorityInput').value })
+                body: JSON.stringify({ 
+                    title: title, 
+                    priority: document.getElementById('priorityInput').value 
+                })
             });
 
             document.getElementById('titleInput').value = '';
@@ -135,11 +138,20 @@
         }
 
         async function toggleComplete(id) {
+            // This is the key fix: we fetch current state first, then toggle it
+            const res = await fetch(API_URL);
+            const tasks = await res.json();
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            const newCompleted = !task.completed;
+
             await fetch(`${API_URL}/${id}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ completed: true })
+                body: JSON.stringify({ completed: newCompleted })
             });
+
             loadTasks();
         }
 
