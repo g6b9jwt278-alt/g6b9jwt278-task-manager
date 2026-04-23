@@ -104,11 +104,14 @@
                                 <span class="badge bg-${task.priority === 'High' ? 'danger' : task.priority === 'Medium' ? 'warning' : 'info'}">${task.priority}</span>
                             </div>
                             <div class="btn-group">
-                                <button onclick="toggleComplete(${task.id})" class="btn btn-sm ${task.completed ? 'btn-warning' : 'btn-success'} me-1">
+                                <button onclick="toggleComplete(${task.id})" 
+                                        class="btn btn-sm ${task.completed ? 'btn-warning' : 'btn-success'} me-1">
                                     ${task.completed ? 'Undo' : 'Complete'}
                                 </button>
-                                <button onclick="editTask(${task.id}, '${task.title.replace(/'/g, "\\'")}', '${task.priority}')" class="btn btn-sm btn-primary me-1">Edit</button>
-                                <button onclick="deleteTask(${task.id})" class="btn btn-sm btn-danger">Delete</button>
+                                <button onclick="editTask(${task.id}, '${task.title.replace(/'/g, "\\'")}')" 
+                                        class="btn btn-sm btn-primary me-1">Edit</button>
+                                <button onclick="deleteTask(${task.id})" 
+                                        class="btn btn-sm btn-danger">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -124,10 +127,7 @@
             await fetch(API_URL, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    title: title, 
-                    priority: document.getElementById('priorityInput').value 
-                })
+                body: JSON.stringify({ title: title, priority: document.getElementById('priorityInput').value })
             });
 
             document.getElementById('titleInput').value = '';
@@ -143,24 +143,22 @@
             loadTasks();
         }
 
-        function editTask(id, title, priority) {
+        function editTask(id, title) {
             document.getElementById('editTaskId').value = id;
             document.getElementById('editTitle').value = title;
-            document.getElementById('editPriority').value = priority;
             new bootstrap.Modal(document.getElementById('editModal')).show();
         }
 
         async function saveEdit() {
             const id = document.getElementById('editTaskId').value;
             const title = document.getElementById('editTitle').value.trim();
-            const priority = document.getElementById('editPriority').value;
 
             if (!title) return alert("Title is required");
 
             await fetch(`${API_URL}/${id}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ title: title, priority: priority })
+                body: JSON.stringify({ title: title })
             });
 
             bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
@@ -174,7 +172,6 @@
             }
         }
 
-        // Load tasks when page opens
         window.onload = loadTasks;
     </script>
 </body>
