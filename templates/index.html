@@ -120,24 +120,13 @@
         const API_URL = '/api/tasks';
 
         async function loadTasks() {
-            const search = document.getElementById('searchInput').value.trim();
-            const priority = document.getElementById('priorityFilter').value;
-            const status = document.getElementById('statusFilter').value;
-
-            let url = API_URL;
-            const params = new URLSearchParams();
-            if (search) params.append('search', search);
-            if (priority !== 'All') params.append('priority', priority);
-            if (status !== 'All') params.append('status', status);
-            if (params.toString()) url += '?' + params.toString();
-
-            const res = await fetch(url);
+            const res = await fetch(API_URL);
             const tasks = await res.json();
             const container = document.getElementById('taskList');
             container.innerHTML = '';
 
             if (tasks.length === 0) {
-                container.innerHTML = `<p class="text-center text-muted py-5">No tasks found.</p>`;
+                container.innerHTML = `<p class="text-center text-muted py-5">No tasks yet. Add one above!</p>`;
                 return;
             }
 
