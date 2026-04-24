@@ -150,4 +150,92 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <h5 class="${task.completed ? 'completed' : ''}">${task.title}</h5>
-                                <span class="badge bg-${task.priority === 'High' ? 'danger' : task.priority === 'Medium' ?
+                                <span class="badge bg-${task.priority === 'High' ? 'danger' : task.priority === 'Medium' ? 'warning' : 'info'}">${task.priority}</span>
+                                ${task.due_date ? `<small class="ms-2 ${isOverdue ? 'overdue' : 'text-muted'}">Due: ${task.due_date}</small>` : ''}
+                            </div>
+                            <div class="btn-group">
+                                <button onclick="toggleComplete(${task.id})" class="btn btn-sm ${task.completed ? 'btn-warning' : 'btn-success'} me-1">
+                                    ${task.completed ? 'Undo' : 'Complete'}
+                                </button>
+                                <button onclick="editTask(${task.id}, '${task.title.replace(/'/g, "\\'")}', '${task.due_date || ''}', '${task.priority}')" class="btn btn-sm btn-primary me-1">Edit</button>
+                                <button onclick="deleteTask(${task.id})" class="btn btn-sm btn-danger">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function addTask() {
+            const title = document.getElementById('titleInput').value.trim();
+            if (!title) return alert("Please enter a task title");
+
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    title: title, 
+                    priority: document.getElementById('priorityInput').value,
+                    due_date: document.getElementById('dueDateInput').value 
+                })
+            });
+
+            document.getElementById('titleInput').value = '';
+            document.getElementById('dueDateInput').value = '';
+            loadTasks();
+        }
+
+        async function toggleComplete(id) {
+            await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ completed: true })
+            });
+            loadTasks();
+        }
+
+        function editTask(id, title, due_date, priority) {
+            document.getElementById('editTaskId').value = id;
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editDueDate').value = due_date || '';
+            document.getElementById('editPriority').value = priority;
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        async function saveEdit() {
+            const id = document.getElementById('editTaskId').value;
+            const title = document.getElementById('editTitle').value.trim();
+            const due_date = document.getElementById('editDueDate').value;
+            const priority = document.getElementById('editPriority').value;
+
+            if (!title) return alert("Title is required");
+
+            await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ title, due_date, priority })
+            });
+
+            bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+            loadTasks();
+        }
+
+        async function deleteTask(id) {
+            if (confirm("Delete this task?")) {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                loadTasks();
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('priorityFilter').value = 'All';
+            document.getElementById('statusFilter').value = 'All';
+            loadTasks();
+        }
+
+        window.onload = loadTasks;
+    </script>
+</body>
+</html>
