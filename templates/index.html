@@ -28,54 +28,62 @@
         const API_URL = '/api/tasks';
 
         async function loadTasks() {
-            try {
-                const res = await fetch(API_URL);
-                const tasks = await res.json();
-                const container = document.getElementById('taskList');
-                container.innerHTML = '';
+            const res = await fetch(API_URL);
+            const tasks = await res.json();
+            const container = document.getElementById('taskList');
+            container.innerHTML = '';
 
-                if (tasks.length === 0) {
-                    container.innerHTML = `<p class="text-muted">No tasks yet.</p>`;
-                    return;
-                }
-
-                tasks.forEach(task => {
-                    const item = document.createElement('div');
-                    item.className = 'list-group-item';
-                    item.innerHTML = `
-                        ${task.title} 
-                        <span class="badge bg-secondary">${task.priority}</span>
-                    `;
-                    container.appendChild(item);
-                });
-            } catch (e) {
-                console.error(e);
+            if (tasks.length === 0) {
+                container.innerHTML = `<p class="text-muted">No tasks yet.</p>`;
+                return;
             }
+
+            tasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = `list-group-item d-flex justify-content-between align-items-center ${task.completed ? 'list-group-item-success' : ''}`;
+                item.innerHTML = `
+                    <span>${task.title}</span>
+                    <div>
+                        <button onclick="toggleComplete(${task.id})" class="btn btn-sm ${task.completed ? 'btn-warning' : 'btn-success'} me-1">
+                            ${task.completed ? 'Undo' : 'Complete'}
+                        </button>
+                        <button onclick="deleteTask(${task.id})" class="btn btn-sm btn-danger">Delete</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
         }
 
         async function addTask() {
             const title = document.getElementById('titleInput').value.trim();
             if (!title) return alert("Please enter a title");
 
-            try {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ title: title })
-                });
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ title: title })
+            });
 
-                if (res.ok) {
-                    document.getElementById('titleInput').value = '';
-                    loadTasks();
-                } else {
-                    alert("Failed to add task");
-                }
-            } catch (e) {
-                alert("Error connecting to server");
+            document.getElementById('titleInput').value = '';
+            loadTasks();
+        }
+
+        async function toggleComplete(id) {
+            await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ completed: true })
+            });
+            loadTasks();
+        }
+
+        async function deleteTask(id) {
+            if (confirm("Delete this task?")) {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                loadTasks();
             }
         }
 
-        // Load tasks on page load
         window.onload = loadTasks;
     </script>
 </body>
