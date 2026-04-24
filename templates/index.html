@@ -147,11 +147,20 @@
         }
 
         async function toggleComplete(id) {
+            // FIXED: Properly toggle by fetching current state first
+            const res = await fetch(API_URL);
+            const tasks = await res.json();
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            const newCompleted = !task.completed;
+
             await fetch(`${API_URL}/${id}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ completed: true })
+                body: JSON.stringify({ completed: newCompleted })
             });
+
             loadTasks();
         }
 
